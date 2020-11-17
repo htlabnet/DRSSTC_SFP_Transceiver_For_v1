@@ -1,0 +1,3 @@
+./rtl/tb_top.v
+
+../rtl/drsstc_sfp_transceiver_top.v
