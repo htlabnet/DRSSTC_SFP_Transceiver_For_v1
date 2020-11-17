@@ -73,3 +73,9 @@ _output_files/
 PLLJ_PLLSPE_INFO.txt
 output_files/*
 //!output_files/*.fit.summary
+
+# ignore ModelSim work file
+sim/work/
+sim/*.ini
+sim/*.log
+sim/*.wlf
