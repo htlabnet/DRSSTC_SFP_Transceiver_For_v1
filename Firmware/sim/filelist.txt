@@ -1,3 +1,7 @@
 ./rtl/tb_top.v
 
 ../rtl/drsstc_sfp_transceiver_top.v
+../rtl/rstGen.v
+../rtl/encode_8b10b.v
+../rtl/decode_8b10b.v
+../rtl/SerialTx_Master.v
