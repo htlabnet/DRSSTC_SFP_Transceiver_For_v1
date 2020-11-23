@@ -48,13 +48,61 @@ module drsstc_sfp_transceiver_top (
     output          TP1,
     output          TP2
     );
+
     
-    
-    // TEST
-    assign LED_TX[0] = !DIP_SW1[0];
-    assign LED_TX[1] = !DIP_SW1[1];
-    assign LED_RX[0] = !DIP_SW1[2];
-    assign LED_RX[1] = !DIP_SW1[3];
-    
+    //==================================================================
+    // Reset
+    //==================================================================
+    wire            w_rst_n;
+    rstGen rstGen_inst (
+        .i_clk ( CLK_40M[0] ),
+        .i_res_n ( RST_N[0] ),
+        .o_res_n ( w_rst_n )
+    );
+
+
+    //==================================================================
+    // *** Interrupter signal for Debug Only
+    // *** Freq = 1kHz, Duty = 50%
+    //==================================================================
+    reg     [23:0]  r_dbg_sig_cnt;
+    reg             r_dbg_pls;
+    wire            w_dbg_sig_clr = (r_dbg_sig_cnt == 24'd19999);
+    always @(posedge CLK_40M[0] or negedge w_rst_n) begin
+        if (~w_rst_n) begin
+            r_dbg_sig_cnt <= 24'd0;
+            r_dbg_pls <= 1'b0;
+        end else if (w_dbg_sig_clr) begin
+            r_dbg_sig_cnt <= 24'd0;
+            r_dbg_pls <= ~r_dbg_pls;
+        end else begin
+            r_dbg_sig_cnt <= r_dbg_sig_cnt + 24'd1;
+        end
+    end
+
+
+    //==================================================================
+    // Serial data Transmitter
+    //==================================================================
+    SerialTx_Master SerialTx_Master_inst (
+        .i_clk ( CLK_40M[0] ),
+        .i_res_n ( w_rst_n ),
+
+        .i_sfp_tx_flt ( SFP_TX_FLT ),
+        .i_IsPro ( 1'b0 ),          // Debug
+        .i_IsMaster ( 1'b1 ),       // Debug
+        //.i_RawPls ( IN[0] ),
+        .i_RawPls ( r_dbg_pls ),    // Debug
+        .i_Option ( 3'b111 ),       // Debug
+
+        .o_SerialData ( LVDS_DAT_IN ),
+        .o_drv_en ( LVDS_DRV_EN ),
+        .o_sfp_tx_dis_n ( SFP_TX_DIS_N ),
+        .o_tx_led ( LED_TX[1:0] )
+    );
+
+
+    assign SFP_RATE_SEL = 1'b0;
+    assign SFP_MOD_DEF = 3'bzzz;
     
 endmodule
