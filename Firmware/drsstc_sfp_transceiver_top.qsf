@@ -41,7 +41,7 @@ set_global_assignment -name DEVICE EPM570T100C5
 set_global_assignment -name TOP_LEVEL_ENTITY drsstc_sfp_transceiver_top
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "18:34:39  APRIL 05, 2019"
-set_global_assignment -name LAST_QUARTUS_VERSION 13.1
+set_global_assignment -name LAST_QUARTUS_VERSION "18.1.0 Lite Edition"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
@@ -49,7 +49,6 @@ set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR "-1"
 set_global_assignment -name POWER_EXT_SUPPLY_VOLTAGE_TO_REGULATOR 3.3V
 set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (Verilog)"
 set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
-set_global_assignment -name VERILOG_FILE rtl/drsstc_sfp_transceiver_top.v
 set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
 set_location_assignment PIN_12 -to CLK_40M[0]
 set_instance_assignment -name RESERVE_PIN AS_INPUT_TRI_STATED -to CLK_40M[0]
@@ -203,3 +202,10 @@ set_location_assignment PIN_18 -to LVDS_RCV_EN_N
 set_instance_assignment -name RESERVE_PIN AS_OUTPUT_DRIVING_GROUND -to LVDS_RCV_EN_N
 set_location_assignment PIN_4 -to SFP_TX_DIS_N
 set_instance_assignment -name RESERVE_PIN AS_OUTPUT_DRIVING_GROUND -to SFP_TX_DIS_N
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "NO HEAT SINK WITH STILL AIR"
+set_global_assignment -name VERILOG_FILE rtl/SerialTx_Master.v
+set_global_assignment -name SDC_FILE drsstc_sfp_transceiver_top.sdc
+set_global_assignment -name VERILOG_FILE rtl/rstGen.v
+set_global_assignment -name VERILOG_FILE rtl/encode_8b10b.v
+set_global_assignment -name VERILOG_FILE rtl/decode_8b10b.v
+set_global_assignment -name VERILOG_FILE rtl/drsstc_sfp_transceiver_top.v
