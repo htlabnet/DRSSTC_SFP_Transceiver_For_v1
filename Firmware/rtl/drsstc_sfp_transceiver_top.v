@@ -49,6 +49,10 @@ module drsstc_sfp_transceiver_top (
     output          TP2
     );
 
+    //==================================================================
+    // wire
+    //==================================================================
+    wire            w_IsMaster = ~DIP_SW1[0];
     
     //==================================================================
     // Reset
@@ -89,8 +93,8 @@ module drsstc_sfp_transceiver_top (
         .i_res_n ( w_rst_n ),
 
         .i_sfp_tx_flt ( SFP_TX_FLT ),
-        .i_IsPro ( 1'b0 ),          // Debug
-        .i_IsMaster ( 1'b1 ),       // Debug
+        .i_IsPro ( 1'b0 ),
+        .i_IsMaster ( w_IsMaster ),
         //.i_RawPls ( IN[0] ),
         .i_RawPls ( r_dbg_pls ),    // Debug
         .i_Option ( 3'b111 ),       // Debug
