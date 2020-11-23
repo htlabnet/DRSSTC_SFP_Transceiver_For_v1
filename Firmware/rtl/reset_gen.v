@@ -3,7 +3,7 @@
 * Date      : 2020/09/20
 * Design    : kingyo
 ******************************************************************/
-module rstGen (
+module reset_gen (
     input   wire    i_clk,
     input   wire    i_res_n,
     output  wire    o_res_n

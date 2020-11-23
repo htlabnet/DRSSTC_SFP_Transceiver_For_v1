@@ -34,13 +34,13 @@ add wave -group top_tb /tb_top/w_tp1
 add wave -group top_tb /tb_top/w_tp2
 
 # SerialTx_Master.v
-add wave -group tx_data_gen /tb_top/dut/SerialTx_Master_inst/o_SerialData
-add wave -group tx_data_gen /tb_top/dut/SerialTx_Master_inst/w_dispout
-add wave -group tx_data_gen /tb_top/dut/SerialTx_Master_inst/r_dispin
-add wave -group tx_data_gen /tb_top/dut/SerialTx_Master_inst/r_mosi_8b
-add wave -group tx_data_gen /tb_top/dut/SerialTx_Master_inst/w_data_10b
-add wave -group tx_data_gen /tb_top/dut/SerialTx_Master_inst/r_ser_prsc
-add wave -group tx_data_gen /tb_top/dut/SerialTx_Master_inst/w_sample_prsc_en
-add wave -group tx_data_gen /tb_top/dut/SerialTx_Master_inst/r_sample_prsc_en_ff
-add wave -group tx_data_gen /tb_top/dut/SerialTx_Master_inst/r_tx_shiftreg
+add wave -group tx_data_gen /tb_top/dut/serial_tx_master_inst/o_SerialData
+add wave -group tx_data_gen /tb_top/dut/serial_tx_master_inst/w_dispout
+add wave -group tx_data_gen /tb_top/dut/serial_tx_master_inst/r_dispin
+add wave -group tx_data_gen /tb_top/dut/serial_tx_master_inst/r_mosi_8b
+add wave -group tx_data_gen /tb_top/dut/serial_tx_master_inst/w_data_10b
+add wave -group tx_data_gen /tb_top/dut/serial_tx_master_inst/r_ser_prsc
+add wave -group tx_data_gen /tb_top/dut/serial_tx_master_inst/w_sample_prsc_en
+add wave -group tx_data_gen /tb_top/dut/serial_tx_master_inst/r_sample_prsc_en_ff
+add wave -group tx_data_gen /tb_top/dut/serial_tx_master_inst/r_tx_shiftreg
 

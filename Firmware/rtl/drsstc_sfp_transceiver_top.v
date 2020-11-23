@@ -58,7 +58,7 @@ module drsstc_sfp_transceiver_top (
     // Reset
     //==================================================================
     wire            w_rst_n;
-    rstGen rstGen_inst (
+    reset_gen reset_gen_inst (
         .i_clk ( CLK_40M[0] ),
         .i_res_n ( RST_N[0] ),
         .o_res_n ( w_rst_n )
@@ -88,7 +88,7 @@ module drsstc_sfp_transceiver_top (
     //==================================================================
     // Serial data Transmitter
     //==================================================================
-    SerialTx_Master SerialTx_Master_inst (
+    serial_tx_master serial_tx_master_inst (
         .i_clk ( CLK_40M[0] ),
         .i_res_n ( w_rst_n ),
 

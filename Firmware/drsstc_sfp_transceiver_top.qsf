@@ -189,9 +189,9 @@ set_instance_assignment -name RESERVE_PIN AS_OUTPUT_DRIVING_GROUND -to LVDS_RCV_
 set_location_assignment PIN_4 -to SFP_TX_DIS_N
 set_instance_assignment -name RESERVE_PIN AS_OUTPUT_DRIVING_GROUND -to SFP_TX_DIS_N
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "NO HEAT SINK WITH STILL AIR"
-set_global_assignment -name VERILOG_FILE rtl/SerialTx_Master.v
+set_global_assignment -name VERILOG_FILE rtl/serial_tx_master.v
+set_global_assignment -name VERILOG_FILE rtl/reset_gen.v
 set_global_assignment -name SDC_FILE drsstc_sfp_transceiver_top.sdc
-set_global_assignment -name VERILOG_FILE rtl/rstGen.v
 set_global_assignment -name VERILOG_FILE rtl/encode_8b10b.v
 set_global_assignment -name VERILOG_FILE rtl/decode_8b10b.v
 set_global_assignment -name VERILOG_FILE rtl/drsstc_sfp_transceiver_top.v

@@ -1,6 +1,6 @@
 /*============================================================================*/
 /*
- * @file    SerialTx_Master.v
+ * @file    serial_tx_master.v
  * @brief   Serial data transmitter module
  * @note    for Master Device
  * @date    2020/11/23
@@ -8,7 +8,7 @@
  */
 /*============================================================================*/
 
-module SerialTx_Master (
+module serial_tx_master (
     input   wire            i_clk,      // 40MHz
     input   wire            i_res_n,
     input   wire            i_sfp_tx_flt,
