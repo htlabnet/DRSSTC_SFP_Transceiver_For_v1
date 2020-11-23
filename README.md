@@ -36,7 +36,7 @@ INF-8074を参照
 
 
 ## 開発環境
-- Quartus II Version 13.1.0
+- Quartus Prime Version 18.1.0
 
 ## コーディング規約等
 - .vのファイル名は、「モジュール名（小文字スネークケース）.v」とする
