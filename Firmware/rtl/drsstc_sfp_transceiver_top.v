@@ -104,6 +104,11 @@ module drsstc_sfp_transceiver_top (
 
     assign OUT[1] = w_rx_option[0];  // Debug
 
+    // TODO
+    assign OUT[7:2] = 6'd0;
+    assign LV_OUT[2:0] = 3'd0;
+    assign TP1 = 1'b0;
+    assign TP2 = 1'b0;
     assign SFP_RATE_SEL = 1'b0;
     assign SFP_MOD_DEF = 3'bzzz;
     
