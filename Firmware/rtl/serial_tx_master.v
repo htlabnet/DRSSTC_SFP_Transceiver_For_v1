@@ -17,7 +17,7 @@ module serial_tx_master (
     input   wire            i_IsPro,
     input   wire            i_IsMaster,
     input   wire            i_RawPls,
-    input   wire    [2:0]   i_Option,   // [0]:Option1 ~ [2]:Option3
+    input   wire    [2:0]   i_Option,
 
     // Output data
     output  wire            o_SerialData,
@@ -52,7 +52,7 @@ module serial_tx_master (
     wire            w_p2 = ^r_Option[2:0];
 
     // MOSI Data
-    wire    [7:0]   w_mosi_8b = {r_IsPro, r_IsMaster, r_RawPls, w_p1, r_Option[0], r_Option[1], r_Option[2], w_p2};
+    wire    [7:0]   w_mosi_8b = {r_IsPro, r_IsMaster, r_RawPls, w_p1, r_Option[2:0], w_p2};
 
     // Sampling Timing Gen(1MSPS)
     reg     [5:0]   r_sample_prsc_cnt;
