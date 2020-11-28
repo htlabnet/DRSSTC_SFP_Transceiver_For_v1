@@ -53,51 +53,31 @@ module drsstc_sfp_transceiver_top (
     // wire
     //==================================================================
     wire            w_IsMaster = ~DIP_SW1[0];
+    wire    [2:0]   w_option = ~DIP_SW1[3:1];
+    wire            w_clk = CLK_40M[0];
     
     //==================================================================
     // Reset
     //==================================================================
     wire            w_rst_n;
     reset_gen reset_gen_inst (
-        .i_clk ( CLK_40M[0] ),
+        .i_clk ( w_clk ),
         .i_res_n ( RST_N[0] ),
         .o_res_n ( w_rst_n )
     );
-
-
-    //==================================================================
-    // *** Interrupter signal for Debug Only
-    // *** Freq = 1kHz, Duty = 50%
-    //==================================================================
-    reg     [23:0]  r_dbg_sig_cnt;
-    reg             r_dbg_pls;
-    wire            w_dbg_sig_clr = (r_dbg_sig_cnt == 24'd19999);
-    always @(posedge CLK_40M[0] or negedge w_rst_n) begin
-        if (~w_rst_n) begin
-            r_dbg_sig_cnt <= 24'd0;
-            r_dbg_pls <= 1'b0;
-        end else if (w_dbg_sig_clr) begin
-            r_dbg_sig_cnt <= 24'd0;
-            r_dbg_pls <= ~r_dbg_pls;
-        end else begin
-            r_dbg_sig_cnt <= r_dbg_sig_cnt + 24'd1;
-        end
-    end
-
 
     //==================================================================
     // Serial data Transmitter
     //==================================================================
     serial_tx_master serial_tx_master_inst (
-        .i_clk ( CLK_40M[0] ),
+        .i_clk ( w_clk ),
         .i_res_n ( w_rst_n ),
 
         .i_sfp_tx_flt ( SFP_TX_FLT ),
         .i_IsPro ( 1'b0 ),
         .i_IsMaster ( w_IsMaster ),
-        //.i_RawPls ( IN[0] ),
-        .i_RawPls ( r_dbg_pls ),    // Debug
-        .i_Option ( 3'b111 ),       // Debug
+        .i_RawPls ( IN[0] ),            // Debug
+        .i_Option ( {2'd0, IN[1]} ),    // Debug
 
         .o_SerialData ( LVDS_DAT_IN ),
         .o_drv_en ( LVDS_DRV_EN ),
@@ -105,6 +85,24 @@ module drsstc_sfp_transceiver_top (
         .o_tx_led ( LED_TX[1:0] )
     );
 
+    //==================================================================
+    // Serial data receiver
+    //==================================================================
+    wire    [2:0]   w_rx_option;
+    serial_rx serial_rx_inst (
+        .i_clk ( w_clk ),
+        .i_res_n ( w_rst_n ),
+
+        .i_SerialData ( LVDS_DAT_OUT ),
+        .o_rcv_en_n ( LVDS_RCV_EN_N ),
+        .o_IsPro (  ),
+        .o_IsMaster (  ),
+        .o_RawPls ( OUT[0] ),
+        .o_Option ( w_rx_option[2:0] ),
+        .o_rx_led ( LED_RX[1:0] )
+    );
+
+    assign OUT[1] = w_rx_option[0];  // Debug
 
     assign SFP_RATE_SEL = 1'b0;
     assign SFP_MOD_DEF = 3'bzzz;
