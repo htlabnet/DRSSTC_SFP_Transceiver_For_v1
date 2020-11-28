@@ -1,7 +1,12 @@
+# Test bench
 ./rtl/tb_top.v
+./rtl/tb_pattern_gen.v
 
+# DUT
 ../rtl/drsstc_sfp_transceiver_top.v
 ../rtl/reset_gen.v
 ../rtl/encode_8b10b.v
 ../rtl/decode_8b10b.v
 ../rtl/serial_tx_master.v
+../rtl/serial_rx.v
+../rtl/cdr.v

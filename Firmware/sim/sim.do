@@ -20,6 +20,8 @@ vlog \
 
 vsim tb_top -wlf vsim.wlf -wlfcachesize 512
 
+#add wave -r sim:/tb_top/*
 do wave.do
-run 1ms
-WaveRestoreZoom {0 ns} {1 ms}
+
+run 10ms
+WaveRestoreZoom {0 ns} {10 ms}

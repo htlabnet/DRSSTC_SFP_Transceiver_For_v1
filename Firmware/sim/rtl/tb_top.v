@@ -13,9 +13,10 @@ module tb_top ();
     parameter MCO_HZ = 40000000;    // 40MHz
 
     reg             mco = 1'b0;
+    reg             jclk = 1'b0;
     reg             res_n;
-    reg     [7:0]   r_5v_ttl;
-    wire    [7:0]   w_5v_ttl;
+    wire    [7:0]   w_5v_ttl_in;
+    wire    [7:0]   w_5v_ttl_out;
     reg     [2:0]   r_3v3_ttl;
     wire    [2:0]   w_3v3_ttl;
     reg     [7:0]   r_dip_sw1;
@@ -50,14 +51,6 @@ module tb_top ();
     end
 
     //==================================================================
-    // 5V-TTL Signal Setting
-    //==================================================================
-    initial begin
-        // All Low
-        r_5v_ttl <= 8'b00000000;
-    end
-
-    //==================================================================
     // 3.3V-TTL GPIO Signal Setting
     //==================================================================
     initial begin
@@ -80,6 +73,9 @@ module tb_top ();
     initial begin
         r_sfp_loss_sig <= 1'b1;
         r_sfp_tx_flt <= 1'b1;
+        #10000
+        r_sfp_loss_sig <= 1'b0;
+        r_sfp_tx_flt <= 1'b0;
     end
 
     //==================================================================
@@ -88,6 +84,25 @@ module tb_top ();
     initial begin
         r_lvds_dat_out <= 1'b0;
     end
+
+    //==================================================================
+    // Loop back test
+    //==================================================================
+    parameter jitter = 2;
+    always #(500000000 / MCO_HZ + $random %(jitter)) jclk <= ~jclk; 
+    always @(posedge mco) begin
+        r_lvds_dat_out <= w_lvds_dat_in;
+    end
+
+
+    //==================================================================
+    // Dummy input data
+    //==================================================================
+    tb_pattern_gen pattern_gen (
+        .i_clk ( mco ),
+        .i_res_n ( res_n ),
+        .o_ptn ( w_5v_ttl_in[7:0] )
+    );
 
 
     //==================================================================
@@ -99,8 +114,8 @@ module tb_top ();
         .RST_N ( {res_n, res_n} ),
 
         /* 5V-TTL GPIO */
-        .IN ( r_5v_ttl[7:0] ),
-        .OUT ( w_5v_ttl[7:0] ),
+        .IN ( w_5v_ttl_in[7:0] ),
+        .OUT ( w_5v_ttl_out[7:0] ),
         
         /* 3.3V-TTL GPIO */
         .LV_IN ( r_3v3_ttl[2:0] ),
