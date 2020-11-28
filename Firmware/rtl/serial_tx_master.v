@@ -77,6 +77,17 @@ module serial_tx_master (
         end
     end
 
+    // K28.5 insert
+    reg     [7:0]   r_k28_5_cnt;
+    wire            w_k28_5_en = (r_k28_5_cnt == 8'd0);
+    always @(posedge i_clk or negedge i_res_n) begin
+        if (~i_res_n) begin
+            r_k28_5_cnt <= 8'd0;
+        end else if (w_sample_prsc_en) begin
+            r_k28_5_cnt <= r_k28_5_cnt + 8'd1;
+        end
+    end
+
     // Dispality Controll
     reg             r_dispin;
     wire            w_dispout;
@@ -93,7 +104,8 @@ module serial_tx_master (
     // 8b10b Encoder
     wire    [9:0]   w_data_10b;
     encode_8b10b encode_8b10b_inst (
-        .datain ( {1'b0, r_mosi_8b[7:0]} ),
+        //.datain ( {1'b0, r_mosi_8b[7:0]} ),
+        .datain ( {w_k28_5_en, w_k28_5_en ? 8'hbc : r_mosi_8b[7:0]} ),
         .dispin ( r_dispin ),
         .dataout ( w_data_10b ),
         .dispout ( w_dispout )
@@ -101,6 +113,7 @@ module serial_tx_master (
 
     // Serialize Timing Gen(10Mbps)
     reg     [1:0]   r_ser_prsc;
+    wire            w_ser_en = (r_ser_prsc == 2'd0);
     always @(posedge i_clk or negedge i_res_n) begin
         if (~i_res_n) begin
             r_ser_prsc <= 2'd0;
@@ -124,7 +137,7 @@ module serial_tx_master (
     always @(posedge i_clk or negedge i_res_n) begin
         if (~i_res_n) begin
             r_tx_shiftreg <= 10'd0;
-        end else if (r_ser_prsc == 2'd0) begin
+        end else if (w_ser_en) begin
             if (r_sample_prsc_en_ff) begin
                 r_tx_shiftreg <= w_data_10b;
             end else begin
