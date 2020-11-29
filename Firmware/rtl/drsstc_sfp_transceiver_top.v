@@ -55,6 +55,8 @@ module drsstc_sfp_transceiver_top (
     wire            w_IsMaster = ~DIP_SW1[0];
     wire    [2:0]   w_option = ~DIP_SW1[3:1];
     wire            w_clk = CLK_40M[0];
+    wire    [1:0]   w_tx_led;
+    wire    [1:0]   w_rx_led;
     
     //==================================================================
     // Reset
@@ -64,6 +66,19 @@ module drsstc_sfp_transceiver_top (
         .i_clk ( w_clk ),
         .i_res_n ( RST_N[0] ),
         .o_res_n ( w_rst_n )
+    );
+
+    //==================================================================
+    // Boot (reset) sequence
+    //==================================================================
+    boot_seq boot_seq_inst (
+        .i_clk ( w_clk ),
+        .i_res_n ( w_rst_n ),
+
+        .i_rx_led ( w_rx_led[1:0] ),
+        .i_tx_led ( w_tx_led[1:0] ),
+        .o_rx_led ( LED_RX[1:0] ),
+        .o_tx_led ( LED_TX[1:0] )
     );
 
     //==================================================================
@@ -82,7 +97,7 @@ module drsstc_sfp_transceiver_top (
         .o_SerialData ( LVDS_DAT_IN ),
         .o_drv_en ( LVDS_DRV_EN ),
         .o_sfp_tx_dis_n ( SFP_TX_DIS_N ),
-        .o_tx_led ( LED_TX[1:0] )
+        .o_tx_led ( w_tx_led[1:0] )
     );
 
     //==================================================================
@@ -99,7 +114,7 @@ module drsstc_sfp_transceiver_top (
         .o_IsMaster (  ),
         .o_RawPls ( OUT[0] ),
         .o_Option ( w_rx_option[2:0] ),
-        .o_rx_led ( LED_RX[1:0] )
+        .o_rx_led ( w_rx_led[1:0] )
     );
 
     assign OUT[1] = w_rx_option[0];  // Debug
