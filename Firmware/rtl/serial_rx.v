@@ -152,8 +152,8 @@ module serial_rx (
     end
 
     // Parity Check
-    wire            w_p1_ok = ~^w_8b_data[7:4];
-    wire            w_p2_ok = ~^w_8b_data[3:0];
+    wire            w_p1_ok = ^w_8b_data[7:4];
+    wire            w_p2_ok = ^w_8b_data[3:0];
 
     // Output
     always @(posedge i_clk or negedge i_res_n) begin

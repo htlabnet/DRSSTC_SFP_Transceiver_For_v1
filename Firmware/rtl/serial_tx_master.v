@@ -48,8 +48,8 @@ module serial_tx_master (
     end
 
     // Calc parity
-    wire            w_p1 = r_IsPro ^ r_IsMaster ^ r_RawPls;
-    wire            w_p2 = ^r_Option[2:0];
+    wire            w_p1 = r_IsPro ^ r_IsMaster ^ r_RawPls ^ 1'b1;
+    wire            w_p2 = ^r_Option[2:0] ^ 1'b1;
 
     // MOSI Data
     wire    [7:0]   w_mosi_8b = {r_IsPro, r_IsMaster, r_RawPls, w_p1, r_Option[2:0], w_p2};
