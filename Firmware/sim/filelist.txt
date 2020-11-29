@@ -10,3 +10,4 @@
 ../rtl/serial_tx_master.v
 ../rtl/serial_rx.v
 ../rtl/cdr.v
+../rtl/boot_seq.v
