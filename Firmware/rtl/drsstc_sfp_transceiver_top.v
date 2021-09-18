@@ -109,6 +109,8 @@ module drsstc_sfp_transceiver_top (
         .i_res_n ( w_rst_n ),
 
         .i_SerialData ( LVDS_DAT_OUT ),
+        .i_sfp_los ( SFP_LOSS_SIG ),
+        
         .o_rcv_en_n ( LVDS_RCV_EN_N ),
         .o_IsPro (  ),
         .o_IsMaster (  ),

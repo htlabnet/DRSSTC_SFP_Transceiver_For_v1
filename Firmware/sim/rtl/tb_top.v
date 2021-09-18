@@ -76,6 +76,12 @@ module tb_top ();
         #10000
         r_sfp_loss_sig <= 1'b0;
         r_sfp_tx_flt <= 1'b0;
+        #1100000
+        r_sfp_loss_sig <= 1'b1;
+        r_sfp_tx_flt <= 1'b1;
+        #100
+        r_sfp_loss_sig <= 1'b0;
+        r_sfp_tx_flt <= 1'b0;
     end
 
     //==================================================================

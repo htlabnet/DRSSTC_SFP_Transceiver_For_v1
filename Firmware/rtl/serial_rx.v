@@ -16,6 +16,9 @@ module serial_rx (
     // Input serial data
     input   wire            i_SerialData,
 
+    // SFP LOS input
+    input   wire            i_sfp_los,
+
     // SFP receiver enable
     output  wire            o_rcv_en_n,
 
@@ -33,6 +36,17 @@ module serial_rx (
 
     wire            w_sync1bData;
     wire            w_sync1bEn;
+
+    // LOS input synchronizer
+    reg     [1:0]   r_los_syncFF;
+    wire            w_sfp_los = r_los_syncFF[1];
+    always @(posedge i_clk or negedge i_res_n) begin
+        if (~i_res_n) begin
+            r_los_syncFF <= 2'b11;
+        end else begin
+            r_los_syncFF <= {r_los_syncFF[0], i_sfp_los};
+        end
+    end
 
     // CDR
     cdr cdr_inst (
@@ -79,10 +93,15 @@ module serial_rx (
     end
 
     // Symbol lock status
+    // 256Byteに1回の頻度でK28.5を検出した場合のみロック
+    // LOSアサートで強制アンロック状態へ遷移
     reg             r_sym_locked;
     reg     [15:0]  r_k28_5_cnt;
     always @(posedge i_clk or negedge i_res_n) begin
         if (~i_res_n) begin
+            r_sym_locked <= 1'b0;
+            r_k28_5_cnt <= 16'hFFFF;
+        end else if (w_sfp_los) begin
             r_sym_locked <= 1'b0;
             r_k28_5_cnt <= 16'hFFFF;
         end else if (w_sync1bEn) begin
@@ -156,19 +175,21 @@ module serial_rx (
     wire            w_p2_ok = ^w_8b_data[3:0];
 
     // Output
+    // LOSアサートまたはアンロック状態時は出力強制Low
     always @(posedge i_clk or negedge i_res_n) begin
         if (~i_res_n) begin
             o_IsPro <= 1'b0;
             o_IsMaster <= 1'b0;
             o_RawPls <= 1'b0;
             o_Option <= 3'd0;
+        end else if (w_sfp_los || ~r_sym_locked) begin
+            o_RawPls <= 1'b0;
         end else if (w_out_trig) begin
-            
             // If K28.5
             if (r_k28_5_det_FF) begin
                 // Do nothing.
             end else begin
-                if (w_p1_ok & w_p2_ok & r_sym_locked) begin
+                if (w_p1_ok & w_p2_ok) begin
                     o_IsPro <= w_8b_data[7];
                     o_IsMaster <= w_8b_data[6];
                     o_RawPls <= w_8b_data[5];
