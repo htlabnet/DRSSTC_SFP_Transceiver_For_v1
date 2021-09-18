@@ -126,14 +126,14 @@ module serial_rx (
 
     // Symbol lock status
     // 256Byteに1回の頻度でK28.5を検出した場合のみロック
-    // LOSアサートで強制アンロック状態へ遷移
+    // LOSアサート or 8b10bコードエラーで強制アンロック状態へ遷移
     reg             r_sym_locked;
     reg     [15:0]  r_k28_5_cnt;
     always @(posedge i_clk or negedge i_res_n) begin
         if (~i_res_n) begin
             r_sym_locked <= 1'b0;
             r_k28_5_cnt <= 16'hFFFF;
-        end else if (w_sfp_los) begin
+        end else if (w_sfp_los | r_code_err) begin
             r_sym_locked <= 1'b0;
             r_k28_5_cnt <= 16'hFFFF;
         end else if (w_sync1bEn) begin
@@ -155,7 +155,6 @@ module serial_rx (
             end
         end
     end
-    
 
     reg             r_sym_capture_FF;
     reg             r_k28_5_det_FF;
@@ -175,14 +174,14 @@ module serial_rx (
     wire            w_p2_ok = ^w_8b_data[3:0];
 
     // Output
-    // LOSアサートまたはアンロック状態時は出力強制Low
+    // アンロック時は出力強制Low
     always @(posedge i_clk or negedge i_res_n) begin
         if (~i_res_n) begin
             o_IsPro <= 1'b0;
             o_IsMaster <= 1'b0;
             o_RawPls <= 1'b0;
             o_Option <= 3'd0;
-        end else if (w_sfp_los || ~r_sym_locked) begin
+        end else if (~r_sym_locked) begin
             o_RawPls <= 1'b0;
         end else if (w_out_trig) begin
             // If K28.5
