@@ -92,39 +92,6 @@ module serial_rx (
         end
     end
 
-    // Symbol lock status
-    // 256Byteに1回の頻度でK28.5を検出した場合のみロック
-    // LOSアサートで強制アンロック状態へ遷移
-    reg             r_sym_locked;
-    reg     [15:0]  r_k28_5_cnt;
-    always @(posedge i_clk or negedge i_res_n) begin
-        if (~i_res_n) begin
-            r_sym_locked <= 1'b0;
-            r_k28_5_cnt <= 16'hFFFF;
-        end else if (w_sfp_los) begin
-            r_sym_locked <= 1'b0;
-            r_k28_5_cnt <= 16'hFFFF;
-        end else if (w_sync1bEn) begin
-            if (w_k28_5_det) begin
-                r_k28_5_cnt <= 16'd0;
-                if (r_k28_5_cnt == 16'h9ff) begin
-                    r_sym_locked <= 1'b1;
-                end else begin
-                    r_sym_locked <= 1'b0;
-                end
-            end else begin
-                if (r_k28_5_cnt != 16'hFFFF) begin
-                    r_k28_5_cnt <= r_k28_5_cnt + 16'd1;
-                end
-            end
-
-            if (r_k28_5_cnt > 16'h9ff) begin
-                r_sym_locked <= 1'b0;
-            end
-        end
-    end
-
-
     // Dispality & Error control
     wire            w_disp;
     reg             r_disp;
@@ -156,6 +123,39 @@ module serial_rx (
         .code_err ( w_code_err ),
         .disp_err ( w_disp_err )
     );
+
+    // Symbol lock status
+    // 256Byteに1回の頻度でK28.5を検出した場合のみロック
+    // LOSアサートで強制アンロック状態へ遷移
+    reg             r_sym_locked;
+    reg     [15:0]  r_k28_5_cnt;
+    always @(posedge i_clk or negedge i_res_n) begin
+        if (~i_res_n) begin
+            r_sym_locked <= 1'b0;
+            r_k28_5_cnt <= 16'hFFFF;
+        end else if (w_sfp_los) begin
+            r_sym_locked <= 1'b0;
+            r_k28_5_cnt <= 16'hFFFF;
+        end else if (w_sync1bEn) begin
+            if (w_k28_5_det) begin
+                r_k28_5_cnt <= 16'd0;
+                if (r_k28_5_cnt == 16'h9ff) begin
+                    r_sym_locked <= 1'b1;
+                end else begin
+                    r_sym_locked <= 1'b0;
+                end
+            end else begin
+                if (r_k28_5_cnt != 16'hFFFF) begin
+                    r_k28_5_cnt <= r_k28_5_cnt + 16'd1;
+                end
+            end
+
+            if (r_k28_5_cnt > 16'h9ff) begin
+                r_sym_locked <= 1'b0;
+            end
+        end
+    end
+    
 
     reg             r_sym_capture_FF;
     reg             r_k28_5_det_FF;
