@@ -2,8 +2,8 @@
 /*
  * @file    cdr.v
  * @brief   Oversampling clock data recovery (CDR) module
- * @note    Serial data rate : i_clk / 4
- * @date    2020/11/28
+ * @note    Serial data rate : i_clk / 3
+ * @date    2023/10/16
  * @author  kingyo
  */
 /*============================================================================*/
@@ -34,22 +34,22 @@ module cdr (
     wire            w_ts = r_syncFF[2] ^ r_syncFF[1];
     
     // Recovery Logic
-    reg     [1:0]   r_rcvState;
+    reg     [2:0]   r_rcvState;
     always @(posedge i_clk or negedge i_res_n) begin
         if (~i_res_n) begin
-            r_rcvState <= 2'd0;
+            r_rcvState <= 3'b001;
             o_RecoveryData <= 1'b0;
             o_DataEn <= 1'b0;
         end else begin
             // Update transition position
             if (w_ts) begin
-                r_rcvState <= 2'd0;
+                r_rcvState <= 3'b001;
             end else begin
-                r_rcvState <= r_rcvState + 2'd1;
+                r_rcvState <= {r_rcvState[1:0], r_rcvState[2]};
             end
 
             // Capture data stream
-            if (r_rcvState == 2'd1) begin   // 1 or 2
+            if (r_rcvState[1]) begin
                 o_RecoveryData <= r_syncFF[2];
                 o_DataEn <= 1'b1;
             end else begin

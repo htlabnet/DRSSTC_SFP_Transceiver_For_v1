@@ -2,15 +2,17 @@
 /*
  * @file    serial_rx.v
  * @brief   Serial data recieve & decode module
- * @note    Sampling rate    : 40MHz
-            Serial data rate : 10Mbps
- * @date    2020/11/28
+ * @note    for Slave Device
+ *           - Master Clock     : 60MHz
+ *           - Serial Rate      : 20Mbps
+ *           - Output Rate      : 2Mbps
+ * @date    2023/10/16
  * @author  kingyo
  */
 /*============================================================================*/
 
 module serial_rx (
-    input   wire            i_clk,      // 40MHz
+    input   wire            i_clk,
     input   wire            i_res_n,
 
     // Input serial data

@@ -3,13 +3,16 @@
  * @file    serial_tx_master.v
  * @brief   Serial data transmitter module
  * @note    for Master Device
- * @date    2020/11/23
+ *           - Master Clock     : 60MHz
+ *           - Serial Rate      : 20Mbps
+ *           - Sampling Rate    : 2Mbps
+ * @date    2023/10/16
  * @author  kingyo
  */
 /*============================================================================*/
 
 module serial_tx_master (
-    input   wire            i_clk,      // 40MHz
+    input   wire            i_clk,
     input   wire            i_res_n,
     input   wire            i_sfp_tx_flt,
     
@@ -27,6 +30,7 @@ module serial_tx_master (
     output  wire            o_sfp_tx_dis_n,
     output  wire    [1:0]   o_tx_led
 );
+    parameter DEF_SMPL_CNT = 5'd29; // (60MHz / 2Mbps) - 1
 
     // Input Register
     reg             r_IsPro;
@@ -54,16 +58,16 @@ module serial_tx_master (
     // MOSI Data
     wire    [7:0]   w_mosi_8b = {r_IsPro, r_IsMaster, r_RawPls, w_p1, r_Option[2:0], w_p2};
 
-    // Sampling Timing Gen(1MSPS)
-    reg     [5:0]   r_sample_prsc_cnt;
-    wire            w_sample_prsc_en = (r_sample_prsc_cnt == 6'd39); 
+    // Sampling Timing Gen
+    reg     [4:0]   r_sample_prsc_cnt;
+    wire            w_sample_prsc_en = (r_sample_prsc_cnt == DEF_SMPL_CNT); 
     always @(posedge i_clk or negedge i_res_n) begin
         if (~i_res_n) begin
-            r_sample_prsc_cnt <= 6'd0;
+            r_sample_prsc_cnt <= 5'd0;
         end else if (w_sample_prsc_en) begin
-            r_sample_prsc_cnt <= 6'd0;
+            r_sample_prsc_cnt <= 5'd0;
         end else begin
-            r_sample_prsc_cnt <= r_sample_prsc_cnt + 6'd1;
+            r_sample_prsc_cnt <= r_sample_prsc_cnt + 5'd1;
         end
     end
 
@@ -78,6 +82,7 @@ module serial_tx_master (
     end
 
     // K28.5 insert
+    // 256サンプルに1回の割合でサンプリングデータの代わりにK28.5を送信する
     reg     [7:0]   r_k28_5_cnt;
     wire            w_k28_5_en = (r_k28_5_cnt == 8'd0);
     always @(posedge i_clk or negedge i_res_n) begin
@@ -104,21 +109,20 @@ module serial_tx_master (
     // 8b10b Encoder
     wire    [9:0]   w_data_10b;
     encode_8b10b encode_8b10b_inst (
-        //.datain ( {1'b0, r_mosi_8b[7:0]} ),
         .datain ( {w_k28_5_en, w_k28_5_en ? 8'hbc : r_mosi_8b[7:0]} ),
         .dispin ( r_dispin ),
         .dataout ( w_data_10b ),
         .dispout ( w_dispout )
     );
 
-    // Serialize Timing Gen(10Mbps)
-    reg     [1:0]   r_ser_prsc;
-    wire            w_ser_en = (r_ser_prsc == 2'd0);
+    // Serialize Timing Gen
+    reg     [2:0]   r_ser_prsc;
+    wire            w_ser_en = r_ser_prsc[0];
     always @(posedge i_clk or negedge i_res_n) begin
         if (~i_res_n) begin
-            r_ser_prsc <= 2'd0;
+            r_ser_prsc <= 3'b001;
         end else begin
-            r_ser_prsc <= r_ser_prsc + 2'd1;
+            r_ser_prsc <= {r_ser_prsc[1:0], r_ser_prsc[2]};
         end
     end
 
