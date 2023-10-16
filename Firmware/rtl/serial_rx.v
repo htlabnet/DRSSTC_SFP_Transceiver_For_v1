@@ -185,6 +185,7 @@ module serial_rx (
             o_Option <= 3'd0;
         end else if (~r_sym_locked) begin
             o_RawPls <= 1'b0;
+            o_Option <= 3'd0;
         end else if (w_out_trig) begin
             // If K28.5
             if (r_k28_5_det_FF) begin
@@ -197,6 +198,7 @@ module serial_rx (
                     o_Option <= w_8b_data[3:1];
                 end else begin
                     o_RawPls <= 1'b0;
+                    o_Option <= 3'd0;
                 end
             end
         end
