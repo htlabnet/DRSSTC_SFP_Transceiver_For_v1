@@ -3,14 +3,14 @@
  * @file    tb_top.v
  * @brief   Test bench top module
  * @note    
- * @date    2020/11/18
+ * @date    2023/10/16
  * @author  kingyo
  */
 /*============================================================================*/
 `timescale 1ns / 100ps
 
 module tb_top ();
-    parameter MCO_HZ = 40000000;    // 40MHz
+    parameter MCO_HZ = 60000000;    // 60MHz
 
     reg             mco = 1'b0;
     reg             jclk = 1'b0;
@@ -116,7 +116,7 @@ module tb_top ();
     //==================================================================
     drsstc_sfp_transceiver_top dut (
         /* Master Clock and Reset */
-        .CLK_40M ( {mco, mco} ),
+        .CLK_60M ( {mco, mco} ),
         .RST_N ( {res_n, res_n} ),
 
         /* 5V-TTL GPIO */

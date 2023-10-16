@@ -3,7 +3,7 @@
  * @file    boot_seq.v
  * @brief   LED control when power up
  * @note    
- * @date    2020/11/29
+ * @date    2023/10/16
  * @author  kingyo
  */
 /*============================================================================*/
@@ -21,7 +21,7 @@ module boot_seq (
 
     reg     [25:0]  r_cnt;
     reg     [ 1:0]  r_boot_st;
-    wire            w_cnt_max = (r_cnt == 26'd39999999);
+    wire            w_cnt_max = (r_cnt == 26'd59999999);
     always @(posedge i_clk or negedge i_res_n) begin
         if (~i_res_n) begin
             r_cnt <= 26'd0;

@@ -3,14 +3,14 @@
  * @file    drsstc_sfp_transceiver_top.v
  * @brief   drsstc_sfp_transceiver top module
  * @note    http://htlab.net/
- * @date    2019/04/05
+ * @date    2023/10/16
  * @author  pcjpnet
  */
 /*============================================================================*/
 
 module drsstc_sfp_transceiver_top (
     /* Master Clock and Reset */
-    input   [1:0]   CLK_40M,
+    input   [1:0]   CLK_60M,
     input   [1:0]   RST_N,
     
     /* 5V-TTL GPIO */
@@ -54,7 +54,7 @@ module drsstc_sfp_transceiver_top (
     //==================================================================
     wire            w_IsMaster = ~DIP_SW1[0];
     wire    [2:0]   w_option = ~DIP_SW1[3:1];
-    wire            w_clk = CLK_40M[0];
+    wire            w_clk = CLK_60M[0];
     wire    [1:0]   w_tx_led;
     wire    [1:0]   w_rx_led;
     
