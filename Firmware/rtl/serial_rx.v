@@ -24,14 +24,13 @@ module serial_rx (
     // SFP receiver enable
     output  wire            o_rcv_en_n,
 
-    // Output data
-    output  reg             o_IsPro,
-    output  reg             o_IsMaster,
-    output  reg             o_RawPls,
-    output  reg     [2:0]   o_Option,
+    input   wire    [3:0]   i_dip_sel,  // 0:前回値保持, 1:強制Low
 
-    // Status LED
-    output  wire    [1:0]   o_rx_led
+    // Output data
+    output  wire            o_my_lock,  // 自機のLock状態
+    output  reg             o_rx_lock,  // フレームに内包されているLock状態
+    output  reg     [3:0]   o_data,     //  {D4,D3,D2,D1}
+    output  reg             o_master
 );
 
     assign o_rcv_en_n = 1'b0;   // Always enable
@@ -89,7 +88,7 @@ module serial_rx (
             end
 
             if (r_sym_capture) begin
-                r_sym_data <= r_10bShift;
+                r_sym_data <= r_10bShift;   // シンボルロックされたデータ
             end
         end
     end
@@ -127,36 +126,31 @@ module serial_rx (
     );
 
     // Symbol lock status
-    // 256Byteに1回の頻度でK28.5を検出した場合のみロック
+    // 5回連続でK28.5コードを検出した場合にロック状態へ遷移する
     // LOSアサート or 8b10bコードエラーで強制アンロック状態へ遷移
     reg             r_sym_locked;
-    reg     [15:0]  r_k28_5_cnt;
+    reg     [3:0]   r_sym_lock_cnt;
     always @(posedge i_clk or negedge i_res_n) begin
         if (~i_res_n) begin
             r_sym_locked <= 1'b0;
-            r_k28_5_cnt <= 16'hFFFF;
+            r_sym_lock_cnt <= 4'd0;
         end else if (w_sfp_los | r_code_err) begin
+            // ロックハズレ条件
             r_sym_locked <= 1'b0;
-            r_k28_5_cnt <= 16'hFFFF;
-        end else if (w_sync1bEn) begin
+            r_sym_lock_cnt <= 4'd0;
+        end else if (w_sync1bEn & r_sym_capture) begin
             if (w_k28_5_det) begin
-                r_k28_5_cnt <= 16'd0;
-                if (r_k28_5_cnt == 16'h9ff) begin
+                r_sym_lock_cnt <= r_sym_lock_cnt + 4'd1;
+                if (r_sym_lock_cnt == 4'd4) begin
                     r_sym_locked <= 1'b1;
-                end else begin
-                    r_sym_locked <= 1'b0;
                 end
             end else begin
-                if (r_k28_5_cnt != 16'hFFFF) begin
-                    r_k28_5_cnt <= r_k28_5_cnt + 16'd1;
-                end
-            end
-
-            if (r_k28_5_cnt > 16'h9ff) begin
-                r_sym_locked <= 1'b0;
+                r_sym_lock_cnt <= 4'd0;
             end
         end
     end
+
+    assign o_my_lock = r_sym_locked;    // 自機のロック状態出力
 
     reg             r_sym_capture_FF;
     reg             r_k28_5_det_FF;
@@ -172,40 +166,38 @@ module serial_rx (
     end
 
     // Parity Check
-    wire            w_p1_ok = ^w_8b_data[7:4];
-    wire            w_p2_ok = ^w_8b_data[3:0];
+    wire            w_p1_ok = ^w_8b_data[7:0];
 
     // Output
     // アンロック時は出力強制Low
     always @(posedge i_clk or negedge i_res_n) begin
         if (~i_res_n) begin
-            o_IsPro <= 1'b0;
-            o_IsMaster <= 1'b0;
-            o_RawPls <= 1'b0;
-            o_Option <= 3'd0;
+            o_rx_lock <= 1'b0;
+            o_data <= 4'd0;
+            o_master <= 1'b0;
         end else if (~r_sym_locked) begin
-            o_RawPls <= 1'b0;
-            o_Option <= 3'd0;
+            // ロックハズレ
+            o_data[3] <= i_dip_sel[3] ? 1'b0 : o_data[3];
+            o_data[2] <= i_dip_sel[2] ? 1'b0 : o_data[2];
+            o_data[1] <= i_dip_sel[1] ? 1'b0 : o_data[1];
+            o_data[0] <= i_dip_sel[0] ? 1'b0 : o_data[0];
         end else if (w_out_trig) begin
             // If K28.5
             if (r_k28_5_det_FF) begin
                 // Do nothing.
             end else begin
-                if (w_p1_ok & w_p2_ok) begin
-                    o_IsPro <= w_8b_data[7];
-                    o_IsMaster <= w_8b_data[6];
-                    o_RawPls <= w_8b_data[5];
-                    o_Option <= w_8b_data[3:1];
+                if (w_p1_ok & w_8b_data[7]) begin
+                    o_rx_lock <= w_8b_data[6];
+                    o_master <= w_8b_data[5];
+                    o_data[3:0] <= w_8b_data[4:1];
                 end else begin
-                    o_RawPls <= 1'b0;
-                    o_Option <= 3'd0;
+                    o_data[3] <= i_dip_sel[3] ? 1'b0 : o_data[3];
+                    o_data[2] <= i_dip_sel[2] ? 1'b0 : o_data[2];
+                    o_data[1] <= i_dip_sel[1] ? 1'b0 : o_data[1];
+                    o_data[0] <= i_dip_sel[0] ? 1'b0 : o_data[0];
                 end
             end
         end
     end
-
-    // RX LED
-    assign o_rx_led[0] = ~r_sym_locked; // Red
-    assign o_rx_led[1] = o_RawPls;      // Green
 
 endmodule

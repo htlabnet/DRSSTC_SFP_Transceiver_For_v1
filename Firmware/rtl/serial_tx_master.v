@@ -6,7 +6,7 @@
  *           - Master Clock     : 60MHz
  *           - Serial Rate      : 20Mbps
  *           - Sampling Rate    : 2Mbps
- * @date    2023/10/16
+ * @date    2023/10/19
  * @author  kingyo
  */
 /*============================================================================*/
@@ -17,46 +17,47 @@ module serial_tx_master (
     input   wire            i_sfp_tx_flt,
     
     // Input data
-    input   wire            i_IsPro,
-    input   wire            i_IsMaster,
-    input   wire            i_RawPls,
-    input   wire    [2:0]   i_Option,
+    input   wire            i_my_lock,  // 自機ロック状態
+    input   wire            i_rx_lock,  // 受信フレームロック状態
+    input   wire    [3:0]   i_data,     // {D4,D3,D2,D1}
+    input   wire            i_master,
 
     // Output data
     output  wire            o_SerialData,
 
     // Status
     output  wire            o_drv_en,
-    output  wire            o_sfp_tx_dis_n,
-    output  wire    [1:0]   o_tx_led
+    output  wire            o_sfp_tx_dis_n
 );
+
     parameter DEF_SMPL_CNT = 5'd29; // (60MHz / 2Mbps) - 1
 
+    wire    w_start = 1'b1;         // Start bit (1)
+
     // Input Register
-    reg             r_IsPro;
-    reg             r_IsMaster;
-    reg             r_RawPls;
-    reg     [2:0]   r_Option;
+    reg             r_my_lock;
+    reg             r_rx_lock;
+    reg     [3:0]   r_data;
+    reg             r_master;
     always @(posedge i_clk or negedge i_res_n) begin
         if (~i_res_n) begin
-            r_IsPro <= 1'b0;
-            r_IsMaster <= 1'b0;
-            r_RawPls <= 1'b0;
-            r_Option <= 3'd0;
+            r_my_lock <= 1'b0;
+            r_rx_lock <= 1'b0;
+            r_data <= 4'b0;
+            r_master <= 1'b0;
         end else begin
-            r_IsPro <= i_IsPro;
-            r_IsMaster <= i_IsMaster;
-            r_RawPls <= i_RawPls;
-            r_Option <= i_Option;
+            r_my_lock <= i_my_lock;
+            r_rx_lock <= i_rx_lock;
+            r_data <= i_data;
+            r_master <= i_master;
         end
     end
 
     // Calc parity
-    wire            w_p1 = r_IsPro ^ r_IsMaster ^ r_RawPls ^ 1'b1;
-    wire            w_p2 = ^r_Option[2:0] ^ 1'b1;
+    wire            w_p1 = w_start ^ r_my_lock ^ r_master ^ r_data[3] ^ r_data[2] ^ r_data[1] ^ r_data[0] ^ 1'b1;
 
     // MOSI Data
-    wire    [7:0]   w_mosi_8b = {r_IsPro, r_IsMaster, r_RawPls, w_p1, r_Option[2:0], w_p2};
+    wire    [7:0]   w_mosi_8b = {w_start, r_my_lock, r_master, r_data[3:0], w_p1};
 
     // Sampling Timing Gen
     reg     [4:0]   r_sample_prsc_cnt;
@@ -81,18 +82,6 @@ module serial_tx_master (
         end
     end
 
-    // K28.5 insert
-    // 256サンプルに1回の割合でサンプリングデータの代わりにK28.5を送信する
-    reg     [7:0]   r_k28_5_cnt;
-    wire            w_k28_5_en = (r_k28_5_cnt == 8'd0);
-    always @(posedge i_clk or negedge i_res_n) begin
-        if (~i_res_n) begin
-            r_k28_5_cnt <= 8'd0;
-        end else if (w_sample_prsc_en) begin
-            r_k28_5_cnt <= r_k28_5_cnt + 8'd1;
-        end
-    end
-
     // Dispality Controll
     reg             r_dispin;
     wire            w_dispout;
@@ -106,10 +95,56 @@ module serial_tx_master (
         end
     end
 
+    // ロックシンボル送出制御
+    // 自機がロックハズレ状態 or 受信フレームのLockがデサートされている場合にロックシンボルを5回送出する。
+    // ロックシンボル送出後は5フレーム分は必ず通常データの送信に切り替える。
+    reg             r_k28_5_send_en;
+    reg     [3:0]   r_k28_5_send_cnt;
+    reg     [1:0]   r_k28_5_send_status;    // 0:IDLE, 1:k28.5送信中, 3:通常データ送信中
+    always @(posedge i_clk or negedge i_res_n) begin
+        if (~i_res_n) begin
+            r_k28_5_send_en <= 1'b0;
+            r_k28_5_send_status <= 2'd0;
+            r_k28_5_send_cnt <= 4'd0;
+        end else begin
+            if (w_sample_prsc_en) begin
+                case (r_k28_5_send_status[1:0])
+                    2'd0: begin
+                        if (~r_rx_lock | ~r_my_lock) begin
+                            r_k28_5_send_status <= 2'd1;
+                            r_k28_5_send_en <= 1'b1;
+                            r_k28_5_send_cnt <= 4'd0;
+                        end
+                    end
+
+                    2'd1: begin
+                        if (r_k28_5_send_cnt == 4'd4) begin
+                            r_k28_5_send_cnt <= 4'd0;
+                            r_k28_5_send_status <= 2'd2;
+                            r_k28_5_send_en <= 1'b0;
+                        end else begin
+                            r_k28_5_send_cnt <= r_k28_5_send_cnt + 4'd1;
+                        end
+                    end
+
+                    2'd2: begin
+                        if (r_k28_5_send_cnt == 4'd4) begin
+                            r_k28_5_send_cnt <= 4'd0;
+                            r_k28_5_send_status <= 2'd0;
+                        end else begin
+                            r_k28_5_send_cnt <= r_k28_5_send_cnt + 4'd1;
+                        end
+                    end
+                endcase
+            end
+        end
+    end
+
+
     // 8b10b Encoder
     wire    [9:0]   w_data_10b;
     encode_8b10b encode_8b10b_inst (
-        .datain ( {w_k28_5_en, w_k28_5_en ? 8'hbc : r_mosi_8b[7:0]} ),
+        .datain ( {r_k28_5_send_en, r_k28_5_send_en ? 8'hbc : r_mosi_8b[7:0]} ),
         .dispin ( r_dispin ),
         .dataout ( w_data_10b ),
         .dispout ( w_dispout )
@@ -160,10 +195,6 @@ module serial_tx_master (
         end
     end
     assign o_SerialData = r_serialData;
-
-    // TX LED
-    assign o_tx_led[0] = i_sfp_tx_flt;  // Red
-    assign o_tx_led[1] = ~i_sfp_tx_flt; // Green
 
     // Driver
     assign o_drv_en = ~i_sfp_tx_flt;

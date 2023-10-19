@@ -22,12 +22,12 @@ module drsstc_sfp_transceiver_top (
     output  [2:0]   LV_OUT,
     
     /* Onboard DIP-SW */
-    input   [7:0]   DIP_SW1,
-    input   [7:0]   DIP_SW2,
+    input   [7:0]   DIP_SW1,        // Low-active (ON:Low, OFF:High)
+    input   [7:0]   DIP_SW2,        // Low-active (ON:Low, OFF:High)
     
     /* TX and RX LED */
-    output  [1:0]   LED_TX,
-    output  [1:0]   LED_RX,
+    output  [1:0]   LED_TX,         // [1]:RED, [0];GR
+    output  [1:0]   LED_RX,         // [1]:RED, [0];GR
     
     /* SFP Module */
     input           SFP_LOSS_SIG,   // If high, received optical power is below the worst-case receiver sensitivity. Low is normal operation.
@@ -52,11 +52,9 @@ module drsstc_sfp_transceiver_top (
     //==================================================================
     // wire
     //==================================================================
-    wire            w_IsMaster = ~DIP_SW1[0];
-    wire    [2:0]   w_option = ~DIP_SW1[3:1];
     wire            w_clk = CLK_60M[0];
-    wire    [1:0]   w_tx_led;
-    wire    [1:0]   w_rx_led;
+    wire            w_my_locked;        // 自機のロック状態
+    wire            w_rx_lock;          // 受信フレーム内のロックステータス
     
     //==================================================================
     // Reset
@@ -69,16 +67,19 @@ module drsstc_sfp_transceiver_top (
     );
 
     //==================================================================
-    // Boot (reset) sequence
+    // Status LED control
     //==================================================================
-    boot_seq boot_seq_inst (
+    led_ctrl led_ctrl_inst (
         .i_clk ( w_clk ),
         .i_res_n ( w_rst_n ),
-
-        .i_rx_led ( w_rx_led[1:0] ),
-        .i_tx_led ( w_tx_led[1:0] ),
-        .o_rx_led ( LED_RX[1:0] ),
-        .o_tx_led ( LED_TX[1:0] )
+        .i_tx_d1 ( IN[0] ),
+        .i_tx_err ( SFP_MOD_DEF[0] | SFP_TX_FLT ),
+        .i_rx_d1 ( OUT[0] ),
+        .i_rx_err ( SFP_MOD_DEF[0] | SFP_LOSS_SIG | ~w_my_locked),
+        .o_tx_led_red ( LED_TX[1] ),
+        .o_tx_led_gr ( LED_TX[0] ),
+        .o_rx_led_red ( LED_RX[1] ),
+        .o_rx_led_gr ( LED_RX[0] )
     );
 
     //==================================================================
@@ -87,42 +88,41 @@ module drsstc_sfp_transceiver_top (
     serial_tx_master serial_tx_master_inst (
         .i_clk ( w_clk ),
         .i_res_n ( w_rst_n ),
-
         .i_sfp_tx_flt ( SFP_TX_FLT ),
-        .i_IsPro ( 1'b0 ),
-        .i_IsMaster ( w_IsMaster ),
-        .i_RawPls ( IN[0] ),            // Debug
-        .i_Option ( {2'd0, IN[1]} ),    // Debug
-
+        .i_my_lock ( w_my_locked ),         // 自機のロック状態
+        .i_rx_lock ( w_rx_lock ),           // 受信フレームのロック状態
+        .i_data ( IN[3:0] ),
+        .i_master ( ~DIP_SW2[0] ),
         .o_SerialData ( LVDS_DAT_IN ),
         .o_drv_en ( LVDS_DRV_EN ),
-        .o_sfp_tx_dis_n ( SFP_TX_DIS_N ),
-        .o_tx_led ( w_tx_led[1:0] )
+        .o_sfp_tx_dis_n ( SFP_TX_DIS_N )
     );
+
 
     //==================================================================
     // Serial data receiver
     //==================================================================
-    wire    [2:0]   w_rx_option;
+    wire    [3:0]   w_rx_data;
+    wire            w_rx_master;
     serial_rx serial_rx_inst (
         .i_clk ( w_clk ),
         .i_res_n ( w_rst_n ),
-
         .i_SerialData ( LVDS_DAT_OUT ),
         .i_sfp_los ( SFP_LOSS_SIG ),
-        
         .o_rcv_en_n ( LVDS_RCV_EN_N ),
-        .o_IsPro (  ),
-        .o_IsMaster (  ),
-        .o_RawPls ( OUT[0] ),
-        .o_Option ( w_rx_option[2:0] ),
-        .o_rx_led ( w_rx_led[1:0] )
+        .i_dip_sel ( DIP_SW1[3:0] ),
+        .o_my_lock ( w_my_locked ),     // 自機の8b10bシンボルロック状態
+        .o_rx_lock ( w_rx_lock ),       // フレームに内包されていたLockビット状態
+        .o_data ( w_rx_data[3:0] ),
+        .o_master ( w_rx_master )
     );
 
-    assign OUT[1] = w_rx_option[0];  // Debug
+    assign OUT[3:0] = w_rx_data[3:0];
+    assign OUT[4] = w_rx_lock;
+    assign OUT[5] = w_rx_master;
 
     // TODO
-    assign OUT[7:2] = 6'd0;
+    assign OUT[7:6] = 2'd0;
     assign LV_OUT[2:0] = 3'd0;
     assign TP1 = 1'b0;
     assign TP2 = 1'b0;
