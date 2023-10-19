@@ -127,14 +127,15 @@ module serial_rx (
 
     // Symbol lock status
     // 5回連続でK28.5コードを検出した場合にロック状態へ遷移する
-    // LOSアサート or 8b10bコードエラーで強制アンロック状態へ遷移
+    // LOSアサート or 8b10bコードエラー or パリティエラー で強制アンロック状態へ遷移
     reg             r_sym_locked;
     reg     [3:0]   r_sym_lock_cnt;
+    reg             r_p1_ng;
     always @(posedge i_clk or negedge i_res_n) begin
         if (~i_res_n) begin
             r_sym_locked <= 1'b0;
             r_sym_lock_cnt <= 4'd0;
-        end else if (w_sfp_los | r_code_err) begin
+        end else if (w_sfp_los | r_code_err | r_p1_ng) begin
             // ロックハズレ条件
             r_sym_locked <= 1'b0;
             r_sym_lock_cnt <= 4'd0;
@@ -175,8 +176,10 @@ module serial_rx (
             o_rx_lock <= 1'b0;
             o_data <= 4'd0;
             o_master <= 1'b0;
+            r_p1_ng <= 1'b0;
         end else if (~r_sym_locked) begin
             // ロックハズレ
+            r_p1_ng <= 1'b0;
             o_data[3] <= i_dip_sel[3] ? 1'b0 : o_data[3];
             o_data[2] <= i_dip_sel[2] ? 1'b0 : o_data[2];
             o_data[1] <= i_dip_sel[1] ? 1'b0 : o_data[1];
@@ -187,10 +190,12 @@ module serial_rx (
                 // Do nothing.
             end else begin
                 if (w_p1_ok & w_8b_data[7]) begin
+                    r_p1_ng <= 1'b0;
                     o_rx_lock <= w_8b_data[6];
                     o_master <= w_8b_data[5];
                     o_data[3:0] <= w_8b_data[4:1];
                 end else begin
+                    r_p1_ng <= 1'b1;
                     o_data[3] <= i_dip_sel[3] ? 1'b0 : o_data[3];
                     o_data[2] <= i_dip_sel[2] ? 1'b0 : o_data[2];
                     o_data[1] <= i_dip_sel[1] ? 1'b0 : o_data[1];
