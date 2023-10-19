@@ -41,14 +41,14 @@ BNCケーブルでのインタラプタ信号を光ファイバーに置き換�
 
 | bit | Name  | 説明 |
 |-----|----|----|
-| 1 | START | スタートビット（1固定） |
-| 2 | LOCK | 8b10bシンボルロック状態（1:ロック中、0:未ロック中） |
-| 3 | D1 | RawData1 |
+| 7:MSB | START | スタートビット（1固定） |
+| 6 | LOCK | 8b10bシンボルロック状態（1:ロック中、0:未ロック中） |
+| 5 | D1 | RawData1 |
 | 4 | D2 | RawData2 |
-| 5 | D3 | RawData3 |
-| 6 | D4 | RawData4 |
-| 7 | M/S | 1:Master、0:Slave |
-| 8 | P | フレームパリティ（奇数パリティ） |
+| 3 | D3 | RawData3 |
+| 2 | D4 | RawData4 |
+| 1 | M/S | 1:Master、0:Slave |
+| 0:LSB | P | フレームパリティ（奇数パリティ） |
 
 ## Status LED
 SFPスロットの左側がTX表示、右側がRX表示
