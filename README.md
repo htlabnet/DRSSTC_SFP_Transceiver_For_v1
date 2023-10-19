@@ -43,10 +43,10 @@ BNCケーブルでのインタラプタ信号を光ファイバーに置き換�
 |-----|----|----|
 | 7:MSB | START | スタートビット（1固定） |
 | 6 | LOCK | 8b10bシンボルロック状態（1:ロック中、0:未ロック中） |
-| 5 | D1 | RawData1 |
-| 4 | D2 | RawData2 |
-| 3 | D3 | RawData3 |
-| 2 | D4 | RawData4 |
+| 5 | D4 | RawData4 |
+| 4 | D3 | RawData3 |
+| 3 | D2 | RawData2 |
+| 2 | D1 | RawData1 |
 | 1 | M/S | 1:Master、0:Slave |
 | 0:LSB | P | フレームパリティ（奇数パリティ） |
 
