@@ -2,6 +2,7 @@
 
 SFP通信可能なDRSSTC用トランシーバーです。  
 BNCケーブルでのインタラプタ信号を光ファイバーに置き換える目的で使用します。  
+<img src="Document/pcb_top.png" width="500">  
 
 
 ## 特徴
