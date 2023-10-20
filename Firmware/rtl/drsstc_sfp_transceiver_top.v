@@ -54,7 +54,7 @@ module drsstc_sfp_transceiver_top (
     //==================================================================
     wire            w_clk = CLK_60M[0];
     wire            w_my_locked;        // 自機のロック状態
-    wire            w_rx_lock;          // 受信フレーム内のロックステータス
+    wire            w_rx_locked;        // 受信フレーム内のロックステータス
     
     //==================================================================
     // Reset
@@ -90,7 +90,7 @@ module drsstc_sfp_transceiver_top (
         .i_res_n ( w_rst_n ),
         .i_sfp_tx_flt ( SFP_TX_FLT ),
         .i_my_lock ( w_my_locked ),         // 自機のロック状態
-        .i_rx_lock ( w_rx_lock ),           // 受信フレームのロック状態
+        .i_rx_lock ( w_rx_locked ),         // 受信フレームのロック状態
         .i_data ( IN[3:0] ),
         .i_master ( ~DIP_SW2[0] ),
         .o_SerialData ( LVDS_DAT_IN ),
@@ -112,18 +112,19 @@ module drsstc_sfp_transceiver_top (
         .o_rcv_en_n ( LVDS_RCV_EN_N ),
         .i_dip_sel ( DIP_SW1[3:0] ),
         .o_my_lock ( w_my_locked ),     // 自機の8b10bシンボルロック状態
-        .o_rx_lock ( w_rx_lock ),       // フレームに内包されていたLockビット状態
+        .o_rx_lock ( w_rx_locked ),     // フレームに内包されていたLockビット状態
         .o_data ( w_rx_data[3:0] ),
         .o_master ( w_rx_master )
     );
 
     assign OUT[3:0] = w_rx_data[3:0];
-    assign OUT[4] = w_rx_lock;
-    assign OUT[5] = w_rx_master;
+    assign OUT[4] = w_my_locked;
+    assign OUT[5] = w_rx_locked;
+    assign OUT[6] = w_rx_master;
+    assign LV_OUT[2:0] = w_rx_data[2:0];
 
-    // TODO
-    assign OUT[7:6] = 2'd0;
-    assign LV_OUT[2:0] = 3'd0;
+    // Reserved
+    assign OUT[7] = 2'd0;
     assign TP1 = 1'b0;
     assign TP2 = 1'b0;
     assign SFP_RATE_SEL = 1'b0;
